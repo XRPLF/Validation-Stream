@@ -1,6 +1,8 @@
 # Basic live view of:
 ## `https://validations.zaphod.ee/`
 
+This stream is a subset of validators. Greater coverage is expected when 1.7.0 is extended to all servers.
+
 Demo: https://xyckhcb.dlvr.cloud/
 
 ## Project setup
