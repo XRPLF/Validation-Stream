@@ -1,4 +1,7 @@
-# validation-stream
+# Basic live view of:
+## `https://validations.zaphod.ee/`
+
+Demo: https://xyckhcb.dlvr.cloud/
 
 ## Project setup
 ```
