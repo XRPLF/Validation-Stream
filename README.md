@@ -3,7 +3,7 @@
 
 This stream is a subset of validators. Greater coverage is expected when 1.7.0 is extended to all servers.
 
-Demo: https://xyckhcb.dlvr.cloud/
+### Live demo: https://vg52us2.dlvr.cloud
 
 ## Project setup
 ```
