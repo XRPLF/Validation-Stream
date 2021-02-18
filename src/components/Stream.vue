@@ -4,22 +4,34 @@
       Connecting
     </div>
     <div class="alert alert-success text-center mb-1 font-weight-bold" v-if="connected">
-      <b>Connected</b> - Last ledger: <b>{{ lastLedgerIndex }}</b>
+      <div class="d-inline-block px-2">
+        <b>Connected</b> - Last ledger: <b>{{ lastLedgerIndex }}</b>
+      </div>
+      <div class="d-inline-block px-2">
+        <input type="checkbox" id="hashicons" v-model="hashicon" />
+        <label for="hashicons" class="px-1">Show Hashicons</label>
+      </div>
     </div>
     <div class="alert alert-danger text-center mb-1 font-weight-bold" v-if="error">
       <b>Error:</b>
       <pre>{{ error }}</pre>
     </div>
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <ul class="node-list mt-2 pb-0 mb-0">
+    <div :class="{
+      'card shadow-sm': hashicon
+    }">
+      <div :class="{
+        'card-body': hashicon
+      }">
+        <ul class="node-list mt-4 pb-0 mb-0" :class="{
+          'hashicon': hashicon
+        }">
           <li v-for="node in Object.keys(nodes)" v-bind:key="node" class="border" :class="{
             'border-muted is-behind': nodes[node][0].ledger_index !== prevLedgerIndex && nodes[node][0].ledger_index !== lastLedgerIndex,
             'border-primary': nodes[node][0].ledger_index === lastLedgerIndex,
             'border-secondary is-prev': nodes[node][0].ledger_index === prevLedgerIndex,
             'bg-primary is-first': node === firstNode
           }">
-            <img :src="nodeIcons[node]" width="35" class="icon" />
+            <img v-if="hashicon" :src="nodeIcons[node]" width="35" class="icon" />
             <i v-if="node !== firstNode" :class="{
               'bg-primary': nodes[node][0].ledger_index === lastLedgerIndex,
               'bg-light': nodes[node][0].ledger_index !== lastLedgerIndex
@@ -67,7 +79,8 @@ export default {
       nodeIcons: {},
       lastLedgerIndex: '',
       prevLedgerIndex: '',
-      firstNode: ''
+      firstNode: '',
+      hashicon: false
     }
   },
   computed: {
@@ -134,26 +147,37 @@ export default {
     padding: 0;
     margin-left: 1em;
 
+    &.hashicon {
+      >li {
+        height: 32px;
+        border-top-right-radius: 7px;
+        border-bottom-right-radius: 7px;
+        border-radius: 0px;
+        margin-right: 30px;
+        padding-left: 25px;
+        border-top-right-radius: 7px;
+        border-bottom-right-radius: 7px;
+      }
+    }
+
     li {
       display: inline-block;
       position: relative;
       margin: 3px;
       padding: 4px;
       padding-right: 22px;
-      padding-left: 25px;
-      height: 32px;
-      margin-right: 30px;
+      padding-left: 9px;
+      margin-right: 20px;
       margin-bottom: 10px;
-      border-top-right-radius: 7px;
-      border-bottom-right-radius: 7px;
+      border-radius: 5px;
       transition: transform .1s ease-in, opacity .3s ease-in;
 
-      box-shadow: 0px 3px 9px -3px rgba(0, 0, 0, 0.4);
+      // box-shadow: 0px 3px 7px -3px rgba(0, 0, 0, 0.4);
       transform: scale(1.01);
 
       &.is-first {
-        box-shadow: 0px 4px 10px -2px rgba(0, 0, 0, 0.6);
-        transform: scale(1.05);
+        box-shadow: 0px 4px 10px -2px rgba(0, 0, 0, 0.5);
+        transform: scale(1.08);
       }
 
       &.is-prev {
