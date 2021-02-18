@@ -4,26 +4,41 @@
       Connecting
     </div>
     <div class="alert alert-success text-center mb-1 font-weight-bold" v-if="connected">
-      Connected
+      <b>Connected</b> - Last ledger: <b>{{ lastLedgerIndex }}</b>
     </div>
     <div class="alert alert-danger text-center mb-1 font-weight-bold" v-if="error">
       <b>Error:</b>
       <pre>{{ error }}</pre>
     </div>
-    <div v-for="ledger, index in ledgers" v-bind:key="ledger" class="card mt-3">
-      <h1 class="h4 card-header text-white py-1" :class="{
-        'bg-primary': index === 0,
-        'bg-secondary': index !== 0
-      }"><code class="text-white">{{ ledger }}</code></h1>
-      <div class="card-body px-0 pt-1 pb-0">
+    <div class="card shadow-sm">
+      <div class="card-body">
         <ul class="node-list mt-2 pb-0 mb-0">
-          <li v-for="node in nodesPerLedger[ledger]" v-bind:key="node.master_key" class="shadow-sm" :class="{
-            'bg-primary': index === 0,
-            'bg-secondary': index !== 0
+          <li v-for="node in Object.keys(nodes)" v-bind:key="node" class="border" :class="{
+            'border-muted is-behind': nodes[node][0].ledger_index !== prevLedgerIndex && nodes[node][0].ledger_index !== lastLedgerIndex,
+            'border-primary': nodes[node][0].ledger_index === lastLedgerIndex,
+            'border-secondary is-prev': nodes[node][0].ledger_index === prevLedgerIndex,
+            'bg-primary is-first': node === firstNode
           }">
-            <img :src="nodeIcons[node.master_key]" width="50" class="icon" />
-            <small><code class="text-white">
-              {{ node.master_key.slice(0, 5) }}...{{ node.master_key.slice(-5) }}</code>
+            <img :src="nodeIcons[node]" width="35" class="icon" />
+            <i v-if="node !== firstNode" :class="{
+              'bg-primary': nodes[node][0].ledger_index === lastLedgerIndex,
+              'bg-light': nodes[node][0].ledger_index !== lastLedgerIndex
+            }" class="shadow-sm last"></i>
+            <i v-if="node !== firstNode" :class="{
+              'bg-secondary': nodes[node][0].ledger_index === prevLedgerIndex,
+              'bg-light': nodes[node][0].ledger_index !== prevLedgerIndex
+            }" class="shadow-sm prev"></i>
+            <i v-if="node !== firstNode" :class="{
+              'bg-danger': nodes[node][0].ledger_index !== prevLedgerIndex && nodes[node][0].ledger_index !== lastLedgerIndex,
+              'bg-light': nodes[node][0].ledger_index === prevLedgerIndex || nodes[node][0].ledger_index === lastLedgerIndex
+            }" class="shadow-sm old"></i>
+            <small><code :class="{
+              'text-primary':node !== firstNode && nodes[node][0].ledger_index === lastLedgerIndex,
+              'text-secondary':node !== firstNode && nodes[node][0].ledger_index === prevLedgerIndex,
+              'text-danger':node !== firstNode && nodes[node][0].ledger_index !== prevLedgerIndex && nodes[node][0].ledger_index !== lastLedgerIndex,
+              'text-white': node === firstNode
+            }">
+              {{ node.slice(0, 5) }}...{{ node.slice(-5) }}</code>
             </small>
           </li>
         </ul>
@@ -49,35 +64,13 @@ export default {
       connected: false,
       error: null,
       nodes: {},
-      nodeIcons: {}
+      nodeIcons: {},
+      lastLedgerIndex: '',
+      prevLedgerIndex: '',
+      firstNode: ''
     }
   },
   computed: {
-    ledgers () {
-      return Object.keys(this.nodes)
-        .reduce((a, n) => {
-          a = a.concat(this.nodes[n].map(l => {
-            return Number(l.ledger_index)
-          }))
-          return a
-        }, [])
-        .sort()
-        .filter((value, index, self) => {
-          return self.indexOf(value) === index
-        })
-        .reverse()
-        .filter(l => {
-          return Object.values(this.nodes).map(n => n[0]).filter(n => n.ledger_index === String(l)).length > 0
-        })
-        .slice(0, options.historyLedgerCount)
-    },
-    nodesPerLedger () {
-      return this.ledgers.reduce((a, ledger) => {
-        const nodes = Object.values(this.nodes).map(n => n[0]).filter(n => n.ledger_index === String(ledger))
-        Object.assign(a, { [String(ledger)]: nodes })
-        return a
-      }, {})
-    }
   },
   methods: {
     onMessage (msg) {
@@ -94,6 +87,14 @@ export default {
           // Slice history per node
           if (this.nodes[data.master_key].length > options.historyPerNode) {
             this.nodes[data.master_key] = this.nodes[data.master_key].slice(0, options.historyPerNode)
+          }
+          if (typeof data.ledger_index !== 'undefined') {
+            const ledgerIndex = Number(data.ledger_index)
+            if (ledgerIndex > this.lastLedgerIndex) {
+              this.prevLedgerIndex = String(this.lastLedgerIndex)
+              this.lastLedgerIndex = String(ledgerIndex)
+              this.firstNode = data.master_key
+            }
           }
         }
       } catch (e) {
@@ -129,22 +130,63 @@ export default {
 
 <style scoped lang="scss">
   ul.node-list {
+    margin: 0;
+    padding: 0;
+    margin-left: 1em;
+
     li {
       display: inline-block;
+      position: relative;
       margin: 3px;
       padding: 4px;
-      padding-right: 8px;
-      padding-left: 30px;
-      height: 50px;
-      margin-right: 40px;
+      padding-right: 22px;
+      padding-left: 25px;
+      height: 32px;
+      margin-right: 30px;
       margin-bottom: 10px;
-      border-top-right-radius: 6px;
-      border-bottom-right-radius: 6px;
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+      transition: transform .1s ease-in, opacity .3s ease-in;
+
+      box-shadow: 0px 3px 9px -3px rgba(0, 0, 0, 0.4);
+      transform: scale(1.01);
+
+      &.is-first {
+        box-shadow: 0px 4px 10px -2px rgba(0, 0, 0, 0.6);
+        transform: scale(1.05);
+      }
+
+      &.is-prev {
+        transform: scale(0.98);
+      }
+
+      &.is-behind {
+        opacity: .3;
+        transform: scale(.85);
+      }
 
       >img.icon {
         position: absolute;
-        margin-left: -55px;
-        margin-top: -4px;
+        margin-left: -43px;
+        margin-top: -8px;
+      }
+
+      >i {
+        position: absolute;
+        display: block;
+        right: 2px;
+        top: 2px;
+        width: 8px;
+        border-radius: 8px;
+        height: 8px;
+
+        &.prev {
+          top: 11px;
+        }
+
+        &.old {
+          top: 20px;
+        }
       }
     }
   }
