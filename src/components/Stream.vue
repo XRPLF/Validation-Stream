@@ -50,7 +50,10 @@
               'text-danger':node !== firstNode && nodes[node][0].ledger_index !== prevLedgerIndex && nodes[node][0].ledger_index !== lastLedgerIndex,
               'text-white': node === firstNode
             }">
-              {{ node.slice(0, 5) }}...{{ node.slice(-5) }}</code>
+              {{ node.slice(0, 5) }}...{{ node.slice(-5) }}
+              <br />
+              <small class="domain font-weight-bold d-block">{{ domains[node] || ' ' }}</small>
+            </code>
             </small>
           </li>
         </ul>
@@ -80,7 +83,8 @@ export default {
       lastLedgerIndex: '',
       prevLedgerIndex: '',
       firstNode: '',
-      hashicon: false
+      hashicon: false,
+      domains: {}
     }
   },
   computed: {
@@ -135,8 +139,22 @@ export default {
       }
     }
   },
-  mounted () {
+  async mounted () {
     this.connectIfRequired()
+    const manifestCall = await window.fetch('https://validations.zaphod.ee/manifests.json')
+    const manifestJson = await manifestCall.json()
+    Object.assign(this.domains, manifestJson.reduce((a, r) => {
+      if (r.result.details.domain !== '') {
+        Object.assign(a, {
+          [r.result.details.master_key]: r.result.details.domain
+        })
+      }
+      return a
+    }, {}) || {})
+    const unlmapCall = await window.fetch('https://validations.zaphod.ee/unlmap.json')
+    const unlmapJson = await unlmapCall.json()
+    Object.assign(this.domains, unlmapJson || {})
+    this.$set(this.domains)
   }
 }
 </script>
@@ -157,6 +175,7 @@ export default {
         padding-left: 25px;
         border-top-right-radius: 7px;
         border-bottom-right-radius: 7px;
+        overflow: visible;
       }
     }
 
@@ -170,6 +189,8 @@ export default {
       margin-right: 20px;
       margin-bottom: 10px;
       border-radius: 5px;
+      height: 35px;
+      overflow: hidden;
       transition: transform .1s ease-in, opacity .3s ease-in;
 
       // box-shadow: 0px 3px 7px -3px rgba(0, 0, 0, 0.4);
@@ -193,6 +214,26 @@ export default {
         position: absolute;
         margin-left: -43px;
         margin-top: -8px;
+      }
+
+      >small>code {
+        position: relative;
+        top: -5px;
+      }
+
+      small.domain {
+        line-height: 9px;
+        font-size: 9px;
+        padding: 0;
+        margin: 0;
+        width: 104px;
+        margin-top: -2px;
+        position: absolute;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        direction: rtl;
+        text-align: left;
       }
 
       >i {
