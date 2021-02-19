@@ -3,7 +3,7 @@
 
 This stream is a subset of validators. Greater coverage is expected when 1.7.0 is extended to all servers.
 
-### Live demo: https://l8dgcvw.dlvr.cloud/
+### Live demo: https://ledger-stream-beta.xrplf.org
 
 ## Project setup
 ```
